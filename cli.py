@@ -5,7 +5,7 @@ import json
 import pandas as pd
 from prettytable import PrettyTable
 
-base_url="https://localhost:8765/evcharge/api
+base_url="https://localhost:8765/evcharge/api/
 
 @click.group()
 def cli():
@@ -24,7 +24,8 @@ def healthcheck(format, apikey):
     else:
         print("System down and drowning")  
 
-#resetsessions
+
+#resetsessions (ready?)
 @cli.command()
 @click.option('--apikey', help='This the API key', required=True)
 def resetsessions(format, apikey):    
@@ -35,7 +36,6 @@ def resetsessions(format, apikey):
         print("All sessions have been reset. Default admin credentials have been reset.")
     else:
         print("Reset failed")
-
 
 
 #login
@@ -56,10 +56,6 @@ def login(username, passw):
         print("Login Failed") 
 
 
-
-
-
-
 #logout
 @cli.command()
 @click.option('--apikey', help='This the API key', required=True)
@@ -72,7 +68,6 @@ def logout():
         print("Logout Successful")
     elif res.status_code=401:
         print("Unauthorized user")
-
 
 
 #SessionsPerPoint
@@ -105,11 +100,22 @@ def SessionsPerPoint(point, datefrom, dateto, format, apikey):
     elif from_date > to_date:
         click.echo("Invalid dates input. FROM_DATE must not be later than TO_DATE")
     else:
-        req_url = "/point/datefrom/dateto"
+        req_url = "SessionsPerPoint/"+str(point)+"/"+str(datefrom)+"/"+str(dateto)
         res = requests.get(base_url+req_url)
         if format=='json':
             res = json.loads(res)
-            #somehow print output
+            #print output
+            print("Point: "+str(res["Point"]))
+            print("Point Operator:"+str(res["PointOperator"]))
+            print("Request Timestamp:"+str(res["RequestTimestamp"]))
+            print("Viewing "+str(res["NumberOfChargingSessions"])+" charge events from "+str(from_date)" until "+str(to_date)+":")
+            t = PrettyTable()
+            t.field_names = ["Index","ID","Start Time","Finish Time","Protocol","Energy Delivered","Payment","Veichle Type"]
+            for session in res["ChargingSessionsList"]:
+                #ενα απο τα δυο θα κρατησουμε (ή κανενα )
+                t.add_row([session])
+                t.add_row([session["SessionIndex"], session["SessionID"],session["StartedOn"],session["FinishedOn"],session["Protocol"],session["EnergyDelivered"],session["Payment"],session["VeichleType"] ])
+                print(t)
         else:
             df = pd.read_csv(res)
             #somehow print output
@@ -124,7 +130,7 @@ def SessionsPerPoint(point, datefrom, dateto, format, apikey):
 @click.option('--dateto', type=click.STRING, help='End date', required=True)
 @click.option('--format', type=click.Choice(['json','csv']), default='json', help='This is the ooutput format', required=True)
 @click.option('--apikey', help='This the API key', required=True)
-def SessionsPerStation(point, datefrom, dateto, format, apikey): 
+def SessionsPerStation(station, datefrom, dateto, format, apikey): 
     """Returns a summary of all charge events that have taken place on single station STATION from
     DATEFROM until DATETO"""
 
@@ -148,7 +154,29 @@ def SessionsPerStation(point, datefrom, dateto, format, apikey):
     elif from_date > to_date:
         click.echo("Invalid dates input. FROM_DATE must not be later than TO_DATE")
     else:
-        pass
+        req_url = "SessionsPerStation/"+str(station)+"/"+str(datefrom)+"/"+str(dateto)
+        res = requests.get(base_url+req_url)
+        if format=='json':
+            res = json.loads(res)
+            #print output
+            print("Station: "+str(res["StationID"]))
+            print("Station Operator:"+str(res["Operator"]))
+            print("Request Timestamp:"+str(res["RequestTimestamp"]))
+            print("Number of charging sessions: "+str(res["NumberOfChargingSessions"]))
+            print("Total Active Points: "+str(res["NumberOfActivePoints"]))
+            print("Total Energy Delivered: "+str(res["TotalEnergyDelivered"]))
+            print("Viewing charge events from "+str(from_date)" until "+str(to_date)+":") 
+
+            t = PrettyTable()
+            t.field_names = ["Point ID","Point Sessions","Energy Delivered(kWh)"]
+            for session in res["SessionsSummaryList"]:
+                #ενα απο τα δυο θα κρατησουμε (ή κανενα )
+                t.add_row([session])
+                t.add_row([session["PointID"], session["PointSessions"],session["EnergyDelivered"]])
+                print(t)
+        else:
+            df = pd.read_csv(res)
+            #somehow print output
 
 
 
@@ -183,7 +211,28 @@ def SessionsPerEV(ev, datefrom, dateto, format, apikey):
     elif from_date > to_date:
         click.echo("Invalid dates input. FROM_DATE must not be later than TO_DATE")
     else:
-        pass
+        req_url = "SessionsPerEV/"+str(ev)+"/"+str(datefrom)+"/"+str(dateto)
+        res = requests.get(base_url+req_url)
+        if format=='json':
+            res = json.loads(res)
+            #print output
+            print("Veichle: "+str(res["VeichleID"]))
+            print("Request Timestamp:"+str(res["RequestTimestamp"]))
+            print("Number of charging sessions: "+str(res["NumberOfVeichleChargingSessions"]))
+            print("Total Points Visited: "+str(res["NumberOfVisitedPoints"]))
+            print("Total Energy Consumed: "+str(res["TotalEnergyConsumed"]))
+            print("Viewing charge sessions from "+str(from_date)" until "+str(to_date)+":") 
+
+            t = PrettyTable()
+            t.field_names = ["Session Index","Session ID","Energy Provider","Started Time","Finishe Time","Εnergy Delivered","Price Policy","Cost per kWh","Session Cost"]
+            for session in res["VehicleChargingSessionsList"]:
+                #ενα απο τα δυο θα κρατησουμε (ή κανενα )
+                t.add_row([session])
+                t.add_row([session["SessionIndex"], session["SessionID"],session["EnergyProvider"],session["StartedOn"],session["FinishedOn"],session["ΕnergyDelivered"],session["PricePolicyRef"],session["CostPerKWh"],session["SessionCost"]])
+                print(t)
+        else:
+            df = pd.read_csv(res)
+            #somehow print output
 
 #SessionsPerProvider
 @cli.command()
@@ -202,9 +251,6 @@ def SessionsPerProvider(provider, datefrom, dateto, format, apikey):
     to_year=int(dateto[0:4])
     to_month=int(dateto[4:6])
     to_day=int(dateto[6:8])
-
-    
-
 
     if (len(datefrom) != 8) or (len(dateto) != 8):
         click.echo("Invalid date length!")
