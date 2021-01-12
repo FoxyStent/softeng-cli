@@ -85,6 +85,12 @@ def SessionsPerProvider():
             help='Create new user or change password',
             required_options=['username', 'password'],
             mutually_exclusive=['users', 'sessionsupd', 'healthcheck', 'resetsessions'])
+@click.option('--username',
+            cls=MEOWro,
+            required_options=['usermod'])
+@click.option('--password',
+            cls=MEOWro,
+            required_options=['usermod'])
 @click.option("--users",
             cls=MEOWro,
             help='Show state of user',
@@ -103,7 +109,7 @@ def SessionsPerProvider():
             flag_value=True,
             cls = MEOWro,
             mutually_exclusive=['usermod', 'users', 'sessionsupd', 'healthcheck'])
-def Admin(usermod, users, sessionsupd):
+def Admin(usermod, users, sessionsupd, healthcheck, resetsessions):
     """Advanced Commands for Admins"""
     click.echo('User xxx Successfully logged out')
 

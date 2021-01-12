@@ -9,16 +9,17 @@ class MEOWro(Option):
         help = kwargs.get('help', '')
         if self.mutually_exclusive:
             ex_str = ', '.join(self.mutually_exclusive)
-            kwargs['help'] = help + (
-                ' NOTE: This argument is mutually exclusive with '
+            help = help + (
+                '\nNOTE: This argument is mutually exclusive with '
                 ' arguments: [' + ex_str + '].'
             )
         if self.required_options:
             ex_str = ', '.join(self.required_options)
-            kwargs['help'] = help + (
-                ' NOTE: This argument requires  '
+            help = help + (
+                'NOTE: This argument requires  '
                 ' options: [' + ex_str + '] to be provided.'
             )
+        kwargs['help'] = '\b' + help
 
         super(MEOWro, self).__init__(*args, **kwargs)
 
