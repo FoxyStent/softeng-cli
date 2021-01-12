@@ -1,4 +1,7 @@
 import click
+
+from MEOWro import MEOWro
+
 import datetime
 import requests
 import json
@@ -7,9 +10,11 @@ from prettytable import PrettyTable
 
 base_url="https://localhost:8765/evcharge/api/
 
+
 @click.group()
 def cli():
     pass
+
 
 #healthcheck (ready?)
 @cli.command()
@@ -17,7 +22,7 @@ def cli():
 @click.option('--apikey', help='This the API key', required=True)
 def healthcheck(format, apikey):    
     """Checks if system is up and running"""
-
+    
     res = json.loads(requests.get(base_url+"/healthcheck"))
     if res["status"] == "OK":
         print("System up and running")
@@ -26,6 +31,7 @@ def healthcheck(format, apikey):
 
 
 #resetsessions (ready?)
+
 @cli.command()
 @click.option('--apikey', help='This the API key', required=True)
 def resetsessions(format, apikey):    
@@ -36,6 +42,7 @@ def resetsessions(format, apikey):
         print("All sessions have been reset. Default admin credentials have been reset.")
     else:
         print("Reset failed")
+
 
 
 #login
@@ -61,7 +68,6 @@ def login(username, passw):
 @click.option('--apikey', help='This the API key', required=True)
 def logout(): 
     """Used to log a user out of the system"""
-
     #something needs to be done here
     res = requests.get(base_url+"/logout?username="+username+"?passw="+passw)
     if res.status_code==200:
@@ -120,10 +126,7 @@ def SessionsPerPoint(point, datefrom, dateto, format, apikey):
             df = pd.read_csv(res)
             #somehow print output
 
-
-
-
-@#SessionsPerStation
+#SessionsPerStation
 @cli.command()
 @click.option('--station', help='The station in which we are interested', required=True)
 @click.option('--datefrom', type=click.STRING, help='Starting date', required=True)
@@ -177,6 +180,7 @@ def SessionsPerStation(station, datefrom, dateto, format, apikey):
         else:
             df = pd.read_csv(res)
             #somehow print output
+
 
 
 
@@ -269,12 +273,34 @@ def SessionsPerProvider(provider, datefrom, dateto, format, apikey):
         pass
 
 
+#Admin
 #https://stackoverflow.com/questions/55584012/python-click-dependent-options-on-another-option
 @cli.command()
-@click.option('--usermod')
-@click.argument('--format')
-@click.argument('--apikey')
-def Admin():
+@click.option("--usermod",
+            flag_value=True,
+            cls=MEOWro,
+            help='Create new user or change password',
+            required_options=['username', 'password'],
+            mutually_exclusive=['users', 'sessionsupd', 'healthcheck', 'resetsessions'])
+@click.option("--users",
+            cls=MEOWro,
+            help='Show state of user',
+            mutually_exclusive=['usermod', 'sessionsupd', 'healthcheck', 'resetsessions'])
+@click.option("--sessionsupd",
+            flag_value=True,
+            cls=MEOWro,
+            help='Add new sessions from csv file.',
+            required_options=['source'],
+            mutually_exclusive=['usermod', 'users', 'healthcheck', 'resetsessions'])
+@click.option("--healthcheck",
+            flag_value=True,
+            cls = MEOWro,
+            mutually_exclusive=['usermod', 'users', 'sessionsupd', 'resetsessions'])
+@click.option("--resetsessions",
+            flag_value=True,
+            cls = MEOWro,
+            mutually_exclusive=['usermod', 'users', 'sessionsupd', 'healthcheck'])
+def Admin(usermod, users, sessionsupd):
     """Advanced Commands for Admins"""
     click.echo('User xxx Successfully logged out')
 
