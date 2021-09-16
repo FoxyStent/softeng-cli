@@ -1,2 +1,2 @@
 # softeng-cli
-This is the reason i want to suicide
+CLI Application for Software Engineer 2020 Project. 
